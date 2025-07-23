@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
 
 // Room interface
 export interface Room {
-  _id: string; // MongoDB ObjectId
-  id: string; // keep for compatibility, but use _id everywhere
+  id: string; // Supabase primary key
   name: string;
   description: string;
   price: number;
@@ -33,34 +33,42 @@ export interface BookingData {
 }
 
 export const useRooms = () => {
-  const [rooms, setRooms] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const res = await fetch('/api/rooms');
-        const data = await res.json();
-        if (data.success) {
-          setRooms(data.data);
-        } else {
-          setError(data.message || 'Failed to load rooms');
-        }
-      } catch (err) {
-        setError('Failed to load rooms');
-      } finally {
-        setLoading(false);
-      }
-    };
+    async function fetchRooms() {
+      setLoading(true);
+      const { data, error } = await supabase.from('rooms').select('*');
+      if (error) setError(error.message);
+      setRooms(data || []);
+      setLoading(false);
+    }
     fetchRooms();
   }, []);
 
-  const getRoomById = (id: string): any | undefined => {
-    return rooms.find((room: any) => room._id === id);
+  const getRoomById = (id: string): Room | undefined => {
+    return rooms.find((room) => room.id === id);
   };
 
-  return { rooms, loading, error, getRoomById };
+  // Get room price based on room id and meal plan
+  const getRoomPrice = (roomId: string, mealPlan: 'bed_only' | 'bb' | 'half_board' | 'full_board'): number => {
+    const room = rooms.find((r) => r.id === roomId);
+    if (!room) return 0;
+    switch (mealPlan) {
+      case 'bed_only':
+        return room.bed_only ?? room.price ?? 0;
+      case 'bb':
+        return room.bb ?? room.price ?? 0;
+      case 'half_board':
+        return room.half_board ?? room.price ?? 0;
+      case 'full_board':
+        return room.full_board ?? room.price ?? 0;
+      default:
+        return room.price ?? 0;
+    }
+  };
+
+  return { rooms, loading, error, getRoomById, getRoomPrice };
 };

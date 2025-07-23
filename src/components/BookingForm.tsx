@@ -25,7 +25,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ selectedRoom, onSubmit }) => 
   // Set initial roomType to first room's _id after rooms load
   React.useEffect(() => {
     if (!formData.roomType && rooms && rooms.length > 0) {
-      setFormData(prev => ({ ...prev, roomType: rooms[0]._id }));
+      setFormData(prev => ({ ...prev, roomType: rooms[0].id }));
     }
   }, [rooms]);
 
@@ -110,7 +110,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ selectedRoom, onSubmit }) => 
           required
         >
           {typedRooms.map(room => (
-            <option key={room._id} value={room._id}>
+            <option key={room.id} value={room.id}>
               {room.name}
             </option>
           ))}
@@ -123,7 +123,8 @@ const BookingForm: React.FC<BookingFormProps> = ({ selectedRoom, onSubmit }) => 
         className="w-full p-2 border rounded"
       >
         <option value="bed_only">Bed Only</option>
-        <option value="bed_breakfast">Bed and Breakfast</option>
+        <option value="bb">Bed and Breakfast</option>
+        <option value="half_board">Half Board</option>
         <option value="full_board">Full Board</option>
       </select>
       <textarea

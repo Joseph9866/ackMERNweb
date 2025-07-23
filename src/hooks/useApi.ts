@@ -1,5 +1,59 @@
 import { useState, useEffect } from 'react';
-import { roomsApi, bookingsApi, contactsApi, type Room, type Booking, type CreateBookingData, type CreateContactData } from '../lib/api';
+import { supabase } from '../lib/supabaseClient';
+
+export interface Room {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  capacity: number;
+  amenities: string[];
+  image_url: string;
+  available: boolean;
+  pricing: {
+    bed_only: number;
+    bb: number;
+    half_board: number;
+    full_board: number;
+  };
+}
+
+export interface Booking {
+  id: string;
+  room_id: string;
+  guest_name: string;
+  guest_email: string;
+  guest_phone: string;
+  check_in_date: string;
+  check_out_date: string;
+  number_of_guests: number;
+  meal_plan: 'bed_only' | 'bb' | 'half_board' | 'full_board';
+  special_requests?: string;
+  status: string;
+  total_amount: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateBookingData {
+  room_id: string;
+  guest_name: string;
+  guest_email: string;
+  guest_phone: string;
+  check_in_date: string;
+  check_out_date: string;
+  number_of_guests: number;
+  meal_plan: 'bed_only' | 'bb' | 'half_board' | 'full_board';
+  special_requests?: string;
+}
+
+export interface CreateContactData {
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+}
 
 // Custom hook for rooms
 export const useRooms = (checkIn?: string, checkOut?: string) => {
@@ -8,32 +62,21 @@ export const useRooms = (checkIn?: string, checkOut?: string) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const params = checkIn && checkOut ? { check_in: checkIn, check_out: checkOut } : undefined;
-        const response = await roomsApi.getAll(params);
-        
-        if (response.success && response.data) {
-          setRooms(response.data);
-        } else {
-          throw new Error(response.message || 'Failed to fetch rooms');
-        }
-      } catch (err) {
-        console.error('Error fetching rooms:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch rooms');
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    async function fetchRooms() {
+      setLoading(true);
+      const query = supabase.from('rooms').select('*');
+      // Optionally filter by availability dates if needed
+      // You can add logic here to filter rooms based on checkIn/checkOut
+      const { data, error } = await query;
+      if (error) setError(error.message);
+      setRooms(data || []);
+      setLoading(false);
+    }
     fetchRooms();
   }, [checkIn, checkOut]);
 
   const getRoomById = (id: string): Room | undefined => {
-    return rooms.find(room => room._id === id);
+    return rooms.find(room => room.id === id);
   };
 
   const getAvailableRooms = (): Room[] => {
@@ -68,16 +111,10 @@ export const useBookings = () => {
     try {
       setLoading(true);
       setError(null);
-
-      const response = await bookingsApi.create(bookingData);
-      
-      if (response.success && response.data) {
-        return response.data;
-      } else {
-        throw new Error(response.message || 'Failed to create booking');
-      }
+      const { data, error } = await supabase.from('bookings').insert([bookingData]).select().single();
+      if (error) throw new Error(error.message);
+      return data as Booking;
     } catch (err) {
-      console.error('Error creating booking:', err);
       setError(err instanceof Error ? err.message : 'Failed to create booking');
       return null;
     } finally {
@@ -89,16 +126,10 @@ export const useBookings = () => {
     try {
       setLoading(true);
       setError(null);
-
-      const response = await bookingsApi.getById(id);
-      
-      if (response.success && response.data) {
-        return response.data;
-      } else {
-        throw new Error(response.message || 'Booking not found');
-      }
+      const { data, error } = await supabase.from('bookings').select('*').eq('id', id).single();
+      if (error) throw new Error(error.message);
+      return data as Booking;
     } catch (err) {
-      console.error('Error fetching booking:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch booking');
       return null;
     } finally {
@@ -110,16 +141,10 @@ export const useBookings = () => {
     try {
       setLoading(true);
       setError(null);
-
-      const response = await bookingsApi.updateStatus(id, status);
-      
-      if (response.success) {
-        return true;
-      } else {
-        throw new Error(response.message || 'Failed to update booking status');
-      }
+      const { error } = await supabase.from('bookings').update({ status }).eq('id', id);
+      if (error) throw new Error(error.message);
+      return true;
     } catch (err) {
-      console.error('Error updating booking status:', err);
       setError(err instanceof Error ? err.message : 'Failed to update booking status');
       return false;
     } finally {
@@ -145,16 +170,10 @@ export const useContacts = () => {
     try {
       setLoading(true);
       setError(null);
-
-      const response = await contactsApi.create(contactData);
-      
-      if (response.success) {
-        return true;
-      } else {
-        throw new Error(response.message || 'Failed to submit contact form');
-      }
+      const { error } = await supabase.from('contacts').insert([contactData]);
+      if (error) throw new Error(error.message);
+      return true;
     } catch (err) {
-      console.error('Error submitting contact form:', err);
       setError(err instanceof Error ? err.message : 'Failed to submit contact form');
       return false;
     } finally {
@@ -175,26 +194,23 @@ export const useRoomAvailability = () => {
   const [error, setError] = useState<string | null>(null);
 
   const checkAvailability = async (
-    roomId: string, 
-    checkIn: string, 
+    roomId: string,
+    checkIn: string,
     checkOut: string
   ): Promise<boolean> => {
     try {
       setLoading(true);
       setError(null);
-
-      const response = await roomsApi.checkAvailability(roomId, {
-        check_in_date: checkIn,
-        check_out_date: checkOut
-      });
-      
-      if (response.success && response.data) {
-        return response.data.available;
-      } else {
-        throw new Error(response.message || 'Failed to check availability');
-      }
+      // Example: Check for overlapping bookings in Supabase
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('room_id', roomId)
+        .or(`check_in_date.lte.${checkOut},check_out_date.gte.${checkIn}`);
+      if (error) throw new Error(error.message);
+      // If no overlapping bookings, room is available
+      return !data || data.length === 0;
     } catch (err) {
-      console.error('Error checking availability:', err);
       setError(err instanceof Error ? err.message : 'Failed to check availability');
       return false;
     } finally {

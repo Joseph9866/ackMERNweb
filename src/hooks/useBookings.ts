@@ -20,12 +20,9 @@ export const useBookings = () => {
     try {
       setLoading(true);
       setError(null);
-
-      // Send booking to backend API
-      const response = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { supabase } = await import('../lib/supabaseClient');
+      const { error } = await supabase.from('bookings').insert([
+        {
           room_id: bookingData.roomType,
           guest_name: bookingData.name,
           guest_email: bookingData.email,
@@ -34,15 +31,10 @@ export const useBookings = () => {
           check_out_date: bookingData.checkOut,
           number_of_guests: bookingData.guests,
           special_requests: bookingData.specialRequests,
-        }),
-      });
-
-      const data = await response.json();
-      if (response.ok && data.success) {
-        return true;
-      } else {
-        throw new Error(data.message || 'Failed to create booking');
-      }
+        }
+      ]);
+      if (error) throw new Error(error.message);
+      return true;
     } catch (err) {
       console.error('Error creating booking:', err);
       setError(err instanceof Error ? err.message : 'Failed to create booking');

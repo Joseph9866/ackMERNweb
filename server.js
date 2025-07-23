@@ -1,27 +1,20 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, 'server', '.env') });
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const path = require('path');
 
-const connectDB = require('./server/config/database.js');
 
 // Route imports
-const roomRoutes = require('./server/routes/rooms');
-const bookingRoutes = require('./server/routes/bookings');
-const contactRoutes = require('./server/routes/contacts');
-const paymentRoutes = require('./server/routes/payments');
+// TODO: Replace with Supabase API routes or direct frontend integration
 
 const app = express();
 console.log('Created Express app');
 
-// Connect to MongoDB
-connectDB();
-console.log('Connected to MongoDB');
-
+// Database connection
+ 
 // Security middleware
 app.use(
   helmet({
@@ -82,36 +75,12 @@ app.get('/api/health', (req, res) => {
 console.log('Added health check endpoint');
 
 // API Routes
-app.use('/api/rooms', roomRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/contacts', contactRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use(/^\/api(\/|$)/, (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'API endpoint not found'
-  });
-});
+// TODO: Add Supabase API endpoints or use frontend Supabase client directly
 
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err);
-  // Mongoose validation error
-  if (err.name === 'ValidationError') {
-    const errors = Object.values(err.errors).map(e => e.message);
-    return res.status(400).json({
-      success: false,
-      message: 'Validation Error',
-      errors
-    });
-  }
-  // Mongoose duplicate key error
-  if (err.code === 11000) {
-    return res.status(400).json({
-      success: false,
-      message: 'Duplicate field value entered'
-    });
-  }
+  // MongoDB/Mongoose error handling removed
   // JWT errors
   if (err.name === 'JsonWebTokenError') {
     return res.status(401).json({

@@ -86,7 +86,7 @@ The application uses MongoDB with the following collections:
 ```bash
 git clone https://github.com/Joseph9866/ackMERNweb
 .git
-cd ACK_guest_house_website
+cd ackMERNweb
 ```
 
 2. **Install dependencies**
