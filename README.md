@@ -1,6 +1,6 @@
 # ACK Mt. Kenya Guest House Website – Nyeri, Kenya
 
-Welcome to the official repository of the **ACK Mt. Kenya Guest House Website**, a modern web application developed for a guest house located in **Nyeri Town, Kenya**. The website showcases accommodation options, booking system, contact information, and more—built with performance and scalability in mind.
+Welcome to the official repository of the **ACK Mt. Kenya Guest House Website**, a modern web application for a guest house in **Nyeri Town, Kenya**. The website features accommodation listings, a booking system, contact information, and more—built for performance and scalability using the MERN stack (MongoDB, Express, React, Node.js).
 
 ---
 
@@ -18,13 +18,13 @@ The **ACK Mt. Kenya Guest House – Nyeri** is a serene, faith-based hospitality
 ## ✨ Website Features
 
 - 🛏️ Detailed accommodation listings with real-time availability
-- 📅 Online booking system with Supabase backend
+- 📅 Online booking system with MongoDB backend
 - 📸 Visual gallery of rooms and amenities
 - 📍 Location information with interactive map
 - 📱 Responsive design for mobile, tablet, and desktop
 - ⚡ Fast-loading SPA with modern performance optimization
 - 💬 WhatsApp integration for instant communication
-- 🔒 Secure booking management with row-level security
+- 🔒 Secure booking management with authentication and validation
 
 ---
 
@@ -36,7 +36,9 @@ The **ACK Mt. Kenya Guest House – Nyeri** is a serene, faith-based hospitality
 | [TypeScript](https://www.typescriptlang.org/)   | Type-safe JavaScript development |
 | [Vite](https://vitejs.dev/)        | Lightning-fast dev/build tooling |
 | [Tailwind CSS](https://tailwindcss.com/) | Utility-first CSS framework |
-| [Supabase](https://supabase.com/)  | Backend database and authentication |
+| [MongoDB](https://www.mongodb.com/) | NoSQL database |
+| [Express](https://expressjs.com/)  | Backend API framework |
+| [Node.js](https://nodejs.org/)     | Server runtime |
 | [React Router](https://reactrouter.com/) | Client-side routing |
 | [Lucide React](https://lucide.dev/) | Beautiful icon library |
 
@@ -44,31 +46,31 @@ The **ACK Mt. Kenya Guest House – Nyeri** is a serene, faith-based hospitality
 
 ## 🗄️ Database Schema
 
-The application uses Supabase with the following tables:
+The application uses MongoDB with the following collections:
 
-### Rooms Table
-- `id` (text, primary key)
-- `name` (text) - Room name
-- `description` (text) - Room description
-- `price` (integer) - Price per night in KSh
-- `capacity` (integer) - Maximum guests
-- `amenities` (text array) - List of amenities
-- `image_url` (text) - Room image URL
-- `created_at` / `updated_at` (timestamps)
+### Rooms Collection
+- `_id` (ObjectId, primary key)
+- `name` (string) - Room name
+- `description` (string) - Room description
+- `price` (number) - Price per night in KSh
+- `capacity` (number) - Maximum guests
+- `amenities` (array of strings) - List of amenities
+- `imageUrls` (array of strings) - Room image URLs
+- `createdAt` / `updatedAt` (Date)
 
-### Bookings Table
-- `id` (uuid, primary key)
-- `room_id` (text, foreign key to rooms)
-- `guest_name`, `guest_email`, `guest_phone` (text)
-- `check_in_date`, `check_out_date` (date)
-- `number_of_guests` (integer)
-- `special_requests` (text, optional)
-- `status` (enum: pending, confirmed, cancelled, completed)
-- `total_amount` (integer)
-- `created_at` / `updated_at` (timestamps)
+### Bookings Collection
+- `_id` (ObjectId, primary key)
+- `roomId` (ObjectId, reference to rooms)
+- `guestName`, `guestEmail`, `guestPhone` (string)
+- `checkInDate`, `checkOutDate` (Date)
+- `numberOfGuests` (number)
+- `specialRequests` (string, optional)
+- `status` (string: pending, confirmed, cancelled, completed)
+- `totalAmount` (number)
+- `createdAt` / `updatedAt` (Date)
 
-### Database Functions
-- `check_room_availability()` - Checks if a room is available for given dates
+### Other Collections
+- Contacts, Payments, Admins, etc. as needed
 
 ---
 
@@ -76,13 +78,14 @@ The application uses Supabase with the following tables:
 
 ### Prerequisites
 - Node.js 18+ and npm
-- Supabase account and project
+- MongoDB Atlas account and cluster
 
 ### Installation
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/Joseph9866/ACK_guest_house_website.git
+git clone https://github.com/Joseph9866/ackMERNweb
+.git
 cd ACK_guest_house_website
 ```
 
@@ -96,16 +99,16 @@ npm install
 cp .env.example .env
 ```
 
-Edit `.env` and add your Supabase credentials:
+Edit `.env` and add your MongoDB Atlas URI and other required variables:
 ```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+MONGODB_URI=your_mongodb_atlas_uri
+JWT_SECRET=your_jwt_secret
 ```
 
-4. **Set up Supabase database**
-- Create a new Supabase project
-- Run the migration file in `supabase/migrations/` in your Supabase SQL editor
-- This will create the rooms and bookings tables with sample data
+4. **Set up MongoDB database**
+- Create a new MongoDB Atlas cluster
+- Add your connection string to `.env`
+- The backend will auto-create collections as needed
 
 5. **Start the development server**
 ```bash
@@ -119,33 +122,24 @@ The application will be available at `http://localhost:5173`
 ## 🏗️ Project Structure
 
 ```
-src/
-├── components/          # Reusable UI components
-│   ├── BookingForm.tsx
-│   ├── ContactForm.tsx
-│   ├── Header.tsx
-│   ├── Footer.tsx
-│   ├── LoadingSpinner.tsx
-│   └── ErrorMessage.tsx
-├── hooks/              # Custom React hooks
-│   ├── useRooms.ts
-│   ├── useBookings.ts
-│   └── useContacts.ts
-│   └── database.ts
-├── lib/                # External service configurations
-│   └── database.ts
-├── pages/              # Page components
-│   ├── Home.tsx
-│   ├── Rooms.tsx
-│   ├── Gallery.tsx
-│   ├── Booking.tsx
-│   ├── About.tsx
-│   └── Contact.tsx
-├── utils/              # Utility functions and types
-│   ├── types.ts
-│   ├── constants.ts
-│   └── helpers.ts
-└── App.tsx             # Main application component
+project/
+├── src/                 # Frontend React app
+│   ├── components/
+│   ├── hooks/
+│   ├── lib/
+│   ├── pages/
+│   ├── utils/
+│   └── App.tsx
+├── server/              # Backend Express API
+│   ├── models/
+│   ├── routes/
+│   ├── middleware/
+│   ├── config/
+│   ├── utils/
+│   └── server.js
+├── public/              # Static assets
+├── README.md            # Project documentation
+└── ...                  # Other config and setup files
 ```
 
 ---
@@ -179,13 +173,13 @@ The website can be deployed to various platforms:
 ## 📱 Features in Detail
 
 ### Booking System
-- Real-time room availability checking
+- Real-time room availability checking (MongoDB)
 - Form validation and error handling
 - WhatsApp integration for instant booking
 - Booking status management
 
 ### Room Management
-- Dynamic room listing from database
+- Dynamic room listing from MongoDB database
 - Image galleries with lightbox
 - Amenity filtering and display
 - Pricing and capacity information
@@ -202,6 +196,7 @@ The website can be deployed to various platforms:
 
 - Input validation and sanitization
 - Secure environment variable handling
+- JWT authentication for admin routes
 - HTTPS enforcement in production
 
 ---
@@ -239,4 +234,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Images provided by [Pexels](https://pexels.com)
 - Icons by [Lucide](https://lucide.dev)
 - Built with [Vite](https://vitejs.dev) and [React](https://react.dev)
-- Backend powered by [Supabase](https://supabase.com)
+- Backend powered by [MongoDB](https://mongodb.com), [Express](https://expressjs.com), and [Node.js](https://nodejs.org)
