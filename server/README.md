@@ -30,7 +30,7 @@ Edit the `.env` file with your configuration:
 ```env
 # Database
 MONGODB_URI=mongodb://localhost:27017/ack-guesthouse
-# For MongoDB Atlas: mongodb+srv://username:password@cluster.mongodb.net/ack-guesthouse
+# For MongoDB Atlas: Use your connection string from Atlas dashboard, e.g. mongodb+srv://<username>:<password>@cluster.mongodb.net/ack-guesthouse
 
 # Server
 PORT=5000
