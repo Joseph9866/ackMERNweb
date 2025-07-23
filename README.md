@@ -131,8 +131,8 @@ src/
 │   ├── useRooms.ts
 │   ├── useBookings.ts
 │   └── useContacts.ts
+│   └── database.ts
 ├── lib/                # External service configurations
-│   ├── supabase.ts
 │   └── database.ts
 ├── pages/              # Page components
 │   ├── Home.tsx
@@ -200,7 +200,6 @@ The website can be deployed to various platforms:
 
 ## 🔒 Security Features
 
-- Row Level Security (RLS) enabled on all tables
 - Input validation and sanitization
 - Secure environment variable handling
 - HTTPS enforcement in production
