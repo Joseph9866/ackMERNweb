@@ -66,15 +66,27 @@ router.get('/', async (req, res) => {
 // @access  Public
 router.get('/:id', async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id);
-    
+    console.log('Requested ID:', req.params.id);
+    let room = await Room.findOne({ _id: req.params.id });
+    console.log('Room found by _id:', room);
     if (!room) {
-      return res.status(404).json({
-        success: false,
-        message: 'Room not found'
-      });
+      // Fallback: try to find by name (for debugging)
+      room = await Room.findOne({ name: req.params.id });
+      console.log('Room found by name:', room);
+      if (!room) {
+        // Log all room IDs for debugging
+        const allRooms = await Room.find({}, { _id: 1, name: 1 });
+        console.log('All rooms:', allRooms);
+        return res.status(404).json({
+          success: false,
+          message: 'Room not found',
+          debug: {
+            requestedId: req.params.id,
+            allRooms
+          }
+        });
+      }
     }
-    
     res.json({
       success: true,
       data: room
