@@ -2,6 +2,9 @@
 
 Welcome to the official repository of the **ACK Mt. Kenya Guest House Website**, a modern web application for a guest house in **Nyeri Town, Kenya**. The website features accommodation listings, a booking system, contact information, and more—built for performance and scalability using the MERN stack (Supabase, Express, React, Node.js).
 
+Access the website using
+https://ackweb.vercel.app/
+
 ---
 
 ## 🌍 About ACK Mt. Kenya Guest House – Nyeri
